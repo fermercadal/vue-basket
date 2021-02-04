@@ -58,7 +58,7 @@ export default {
     },
     handleLog(team, points, result) {
       const thisLog = `${this.teams[team].name} shoots ${points}, it's ${result}`;
-      this.logs.push(thisLog);
+      this.logs.unshift(thisLog);
     },
     handleComputerShoot() {
       const points = getRandom() > 50 ? 2 : 3;
