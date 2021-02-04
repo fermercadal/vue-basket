@@ -160,9 +160,11 @@ body {
 
   .vBasket__controls {
     margin-top: auto;
-    padding: 2rem 0;
+    padding: 2rem 0 4rem 0;
 
     button {
+      font-size: 1.2rem;
+      font-weight: 600;
       margin: 1rem;
       padding: 1rem;
     }
