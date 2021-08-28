@@ -2,32 +2,30 @@
   <div class="vBasket">
     <h1>vBasket</h1>
 
-    <div class="vBasket__score">
-      <div class="vBasket__team" v-for="team in this.teams" :key="team.name">
-        <div class="score__name">
-          {{ team.name }}
-        </div>
-        <div class="score__score">
-          {{ team.score }}
-        </div>
-      </div>
-    </div>
+    <section v-if="!start && !over" class="vBasket__start">
+      <p>Select mode</p>
 
-    <div class="vBasket__logs">
-      <ul>
-        <li v-for="log in logs" :key="log">{{ log }}</li>
-      </ul>
-    </div>
+      <button @click="startGame">Start</button>
+    </section>
 
-    <div class="vBasket__controls">
-      <button @click="handlePlayerShoot(2)" :disabled="!possesion">Shoot 2</button>
-      <button @click="handlePlayerShoot(3)" :disabled="!possesion">Shoot 3</button>
-    </div>
+    <section v-if="start" class="vBasket__game">
+      <GameScore :teams="teams" />
+      <GameLogs :logs="logs" />
+      <GameControls @player-shoot="handlePlayerShoot" />
+    </section>
+
+    <section v-if="over" class="vBasket__over">
+      <p>game over screen</p>
+    </section>
   </div>
 </template>
 
 <script>
-function getRandom() {
+import GameScore from './Components/GameScore.vue';
+import GameLogs from './Components/GameLogs.vue';
+import GameControls from './Components/GameControls.vue';
+
+const getRandom = () => {
   return Math.floor(0 + (100 - 0) * Math.random());
 }
 
@@ -35,21 +33,33 @@ export default {
   name: "App",
   data() {
     return {
+      mode: 'time',
+      start: false,
+      over: false,
       teams: {
         A: {
-          name: "Player",
+          name: 'Player',
           score: 0,
         },
         B: {
-          name: "Computer",
+          name: 'Computer',
           score: 0,
         },
       },
+      
+      possesion: true,
       logs: [],
-      possesion: true
     };
   },
+  components: {
+    GameScore,
+    GameLogs,
+    GameControls,
+  },
   methods: {
+    startGame() {
+      this.start = true;
+    },
     handleAttempt(points) {
       const difficulty = points === 3 ? 30 : 50;
       return getRandom() < difficulty ? true : false;
@@ -58,9 +68,9 @@ export default {
       const result = this.handleAttempt(points)
       if(result) {
         this.teams[team].score += points;
-        this.handleLog(team, points, "in");
+        this.handleLog(team, points, 'in');
       } else {
-        this.handleLog(team, points, "out");
+        this.handleLog(team, points, 'out');
       }
       this.possesion = false;
     },
@@ -76,8 +86,8 @@ export default {
         this.possesion = true;
       }, 800);
     },
-    handlePlayerShoot(points) {
-      this.handleScore('A', points);
+    handlePlayerShoot(score) {
+      this.handleScore('A', score);
       this.handleComputerShoot();
     },
   },
