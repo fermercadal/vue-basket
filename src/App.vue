@@ -3,6 +3,17 @@
     <h1>vBasket</h1>
 
     <section v-if="!start && !over" class="vBasket__start">
+      <h2>Game Options</h2>
+      
+      <label>Player Name</label>
+      <input type="text" v-model="teams.A.name" />
+
+      <label>Computer Name</label>
+      <input type="text" v-model="teams.B.name" />
+
+      <label>Points to win:</label>
+      <input type="number" v-model="goal"/>
+
       <button @click="startGame">Start</button>
     </section>
 
@@ -10,12 +21,17 @@
       <GameScore :teams="teams" />
       <GameLogs :logs="logs" />
       <GameControls @player-shoot="handlePlayerShoot" :active="possesion"/>
+
+      <button @click="playAgain">Play Again</button>
+      <button @click="resetGame">Reset</button>
     </section>
 
     <section v-if="over" class="vBasket__over">
       <GameScore :teams="teams" />
       <p><strong>{{ winner }}</strong> wins!</p>
+
       <button @click="playAgain">Play Again</button>
+      <button @click="resetGame">Reset</button>
     </section>
   </div>
 </template>
@@ -33,8 +49,11 @@ export default {
   name: "App",
   data() {
     return {
-      start: false,
+      goal: 10,
+      logs: [],
       over: false,
+      possesion: true,
+      start: false,
       teams: {
         A: {
           name: 'Player',
@@ -45,9 +64,8 @@ export default {
           score: 0,
         },
       },
-      possesion: true,
-      logs: [],
       winner: null,
+      
     };
   },
   components: {
@@ -59,10 +77,10 @@ export default {
     teams: {
       deep: true,
       handler(teams) {
-        if(teams.A.score >= 10) {
+        if(teams.A.score >= this.goal) {
           this.handleWin(teams.A.name)
         }
-        if(teams.B.score >= 10) {
+        if(teams.B.score >= this.goal) {
           this.handleWin(teams.B.name)
         }
       }
@@ -100,7 +118,8 @@ export default {
     },
     handlePlayerShoot(score) {
       this.handleScore('A', score);
-      if (!this.winner) {
+
+      if (this.teams.A.score < this.goal) {
         this.handleComputerShoot();
       }
     },
@@ -109,13 +128,18 @@ export default {
       this.start = false;
       this.winner = team;
     },
-    playAgain() {
-      this.over = false;
-      this.start = true;
-      this.winner = null;
+    resetGame() {
       this.logs = [];
+      this.over = false;
+      this.possesion = true;
+      this.start = false;
       this.teams.A.score = 0;
       this.teams.B.score = 0;
+      this.winner = null;
+    },
+    playAgain() {
+      this.resetGame();
+      this.start = true;
     },
   },
 };
@@ -157,6 +181,33 @@ body {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 90px);
+  }
+
+  .vBasket__start {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: calc(100vh - 90px);
+    padding: 10px;
+
+    label {
+      display: block;
+      width: 100%;
+    }
+
+    input {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      padding: 5px;
+    }
+
+    button {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      padding: .6rem 1.2rem;
+    }
   }
 }
 </style>
