@@ -3,19 +3,19 @@
     <h1>vBasket</h1>
 
     <section v-if="!start && !over" class="vBasket__start">
-      <p>Select mode</p>
-
       <button @click="startGame">Start</button>
     </section>
 
     <section v-if="start" class="vBasket__game">
       <GameScore :teams="teams" />
       <GameLogs :logs="logs" />
-      <GameControls @player-shoot="handlePlayerShoot" />
+      <GameControls @player-shoot="handlePlayerShoot" :active="possesion"/>
     </section>
 
     <section v-if="over" class="vBasket__over">
-      <p>game over screen</p>
+      <GameScore :teams="teams" />
+      <p><strong>{{ winner }}</strong> wins!</p>
+      <button @click="playAgain">Play Again</button>
     </section>
   </div>
 </template>
@@ -33,7 +33,6 @@ export default {
   name: "App",
   data() {
     return {
-      mode: 'time',
       start: false,
       over: false,
       teams: {
@@ -46,9 +45,9 @@ export default {
           score: 0,
         },
       },
-      
       possesion: true,
       logs: [],
+      winner: null,
     };
   },
   components: {
@@ -56,39 +55,67 @@ export default {
     GameLogs,
     GameControls,
   },
+  watch: {
+    teams: {
+      deep: true,
+      handler(teams) {
+        if(teams.A.score >= 10) {
+          this.handleWin(teams.A.name)
+        }
+        if(teams.B.score >= 10) {
+          this.handleWin(teams.B.name)
+        }
+      }
+    }
+  },
   methods: {
     startGame() {
       this.start = true;
     },
-    handleAttempt(points) {
-      const difficulty = points === 3 ? 30 : 50;
-      return getRandom() < difficulty ? true : false;
+    handleAttempt(score) {
+      const difficulty = score === 3 ? 30 : 50;
+      return getRandom() < difficulty;
     },
-    handleScore(team, points) {
-      const result = this.handleAttempt(points)
+    handleScore(team, score) {
+      const result = this.handleAttempt(score);
       if(result) {
-        this.teams[team].score += points;
-        this.handleLog(team, points, 'in');
+        this.teams[team].score += score;
+        this.handleLog(team, score, 'in');
       } else {
-        this.handleLog(team, points, 'out');
+        this.handleLog(team, score, 'out');
       }
       this.possesion = false;
     },
-    handleLog(team, points, result) {
-      const thisLog = `${this.teams[team].name} shoots ${points}, it's ${result}`;
+    handleLog(team, score, result) {
+      const thisLog = `${this.teams[team].name} shoots ${score}, it's ${result}`;
       this.logs.unshift(thisLog);
     },
     handleComputerShoot() {
-      const points = getRandom() > 50 ? 2 : 3;
+      const score = getRandom() > 50 ? 2 : 3;
 
       setTimeout(() => {
-        this.handleScore('B', points);
+        this.handleScore('B', score);
         this.possesion = true;
       }, 800);
     },
     handlePlayerShoot(score) {
       this.handleScore('A', score);
-      this.handleComputerShoot();
+      if (!this.winner) {
+        this.handleComputerShoot();
+      }
+    },
+    handleWin(team) {
+      this.over = true;
+      this.start = false;
+      this.winner = team;
+    },
+    playAgain() {
+      this.over = false;
+      this.start = true;
+      this.winner = null;
+      this.logs = [];
+      this.teams.A.score = 0;
+      this.teams.B.score = 0;
     },
   },
 };
@@ -122,62 +149,14 @@ body {
     font-style: oblique;
     font-weight: 700;
     margin: 0;
-    padding: 3rem 0 2rem 0;
+    padding: 2rem 0;
     width: 100%;
   }
 
-  .vBasket__score {
+  .vBasket__game {
     display: flex;
-    flex-flow: row wrap;
-    justify-content: center;
-
-    .score__name {
-      font-style: oblique;
-      font-weight: 600;
-    }
-
-    .score__score {
-      font-size: 5rem;
-    }
-  }
-
-  .vBasket__team {
-    padding: 1rem;
-    width: 30%;
-  }
-
-  .vBasket__logs {
-    font-size: .9rem;
-    overflow-y: auto;
-    padding: 1rem;
-
-    ul {
-      margin: 0;
-      padding: 0;
-    }
-    
-    li {
-      list-style-type: none;
-      padding: .2rem 0;
-
-      &:first-child {
-        font-size: 1.1rem;
-        font-weight: 600;
-      }
-    }
-    
-  }
-
-  .vBasket__controls {
-    margin-top: auto;
-    padding: 2rem 0 4rem 0;
-
-    button {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin: 1rem;
-      padding: 1rem;
-    }
+    flex-direction: column;
+    height: calc(100vh - 90px);
   }
 }
 </style>
